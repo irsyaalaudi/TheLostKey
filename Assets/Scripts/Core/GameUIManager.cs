@@ -12,6 +12,12 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private GameObject winPanel;
     [SerializeField] private GameObject pausePanel;
+    [SerializeField] private GameObject hudPanel;
+
+    [Header("HUD")]
+    [SerializeField] private TMP_Text healthText;
+    [SerializeField] private TMP_Text gameplayTimeText;
+    [SerializeField] private TMP_Text keyCountText;
 
     [Header("Time Text")]
     [SerializeField] private TMP_Text winTimeText;
@@ -20,6 +26,7 @@ public class GameUIManager : MonoBehaviour
 
     private void Start()
     {
+        // Sembunyikan semua panel saat permainan dimulai
         if (gameOverPanel != null)
             gameOverPanel.SetActive(false);
 
@@ -28,10 +35,63 @@ public class GameUIManager : MonoBehaviour
 
         if (pausePanel != null)
             pausePanel.SetActive(false);
+
+        // Tampilkan HUD saat gameplay dimulai
+        SetHUDVisible(true);
+
+        UpdateHUD();
     }
 
+    private void Update()
+    {
+        // Perbarui HUD hanya saat permainan berlangsung
+        if (gameManager != null &&
+            gameManager.CurrentState == GameState.Playing)
+        {
+            UpdateHUD();
+        }
+    }
+
+    // Mengatur tampilan HUD
+    private void SetHUDVisible(bool visible)
+    {
+        if (hudPanel != null)
+            hudPanel.SetActive(visible);
+    }
+
+    // Memperbarui informasi HUD
+    public void UpdateHUD()
+    {
+        if (gameManager == null)
+            return;
+
+        // Menampilkan Health
+        if (healthText != null)
+        {
+            string hearts = "";
+
+            for (int i = 0; i < 3; i++)
+            {
+                hearts += i < gameManager.CurrentHealth ? "♥ " : "♡ ";
+            }
+
+            healthText.text = hearts.TrimEnd();
+        }
+
+        // Menampilkan Timer Gameplay
+        if (gameplayTimeText != null)
+            gameplayTimeText.text = gameManager.GetFormattedTime();
+
+        // Menampilkan jumlah Key
+        if (keyCountText != null)
+            keyCountText.text = gameManager.CurrentKeys + "/1";
+    }
+
+    // Menampilkan Win Panel
     public void ShowWin(string formattedTime)
     {
+        SetHUDVisible(false);
+
         if (pausePanel != null)
             pausePanel.SetActive(false);
 
@@ -45,8 +105,11 @@ public class GameUIManager : MonoBehaviour
             winTimeText.text = formattedTime;
     }
 
+    // Menampilkan Game Over Panel
     public void ShowGameOver(string formattedTime)
     {
+        SetHUDVisible(false);
+
         if (pausePanel != null)
             pausePanel.SetActive(false);
 
@@ -60,8 +123,11 @@ public class GameUIManager : MonoBehaviour
             gameOverTimeText.text = formattedTime;
     }
 
+    // Menampilkan Pause Panel
     public void ShowPause(string formattedTime)
     {
+        SetHUDVisible(false);
+
         if (pausePanel != null)
             pausePanel.SetActive(true);
 
@@ -69,10 +135,15 @@ public class GameUIManager : MonoBehaviour
             pauseTimeText.text = formattedTime;
     }
 
+    // Menyembunyikan Pause Panel dan melanjutkan HUD
     public void HidePause()
     {
         if (pausePanel != null)
             pausePanel.SetActive(false);
+
+        SetHUDVisible(true);
+
+        UpdateHUD();
     }
 
     // Tombol Resume

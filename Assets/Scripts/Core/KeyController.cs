@@ -1,9 +1,13 @@
+
 using System;
 using UnityEngine;
 
 public class KeyController : MonoBehaviour
 {
     public event Action OnKeyCollected;
+
+    [Header("Core References")]
+    [SerializeField] private GameManager gameManager;
 
     [Header("Door Reference")]
     [SerializeField] private DoorController doorController;
@@ -13,10 +17,12 @@ public class KeyController : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D other)
     {
         // Memastikan objek yang menyentuh adalah Player
-        if (!other.CompareTag("Player")) return;
+        if (!other.CompareTag("Player"))
+            return;
 
         // Mencegah kunci dikumpulkan lebih dari sekali
-        if (isCollected) return;
+        if (isCollected)
+            return;
 
         CollectKey();
     }
@@ -37,7 +43,17 @@ public class KeyController : MonoBehaviour
             Debug.LogError("DoorController belum dihubungkan pada Key!");
         }
 
-        // Memberitahu sistem lain bahwa kunci sudah diambil
+        // Memberitahu GameManager bahwa Key berhasil diambil
+        if (gameManager != null)
+        {
+            gameManager.HandleKeyCollected();
+        }
+        else
+        {
+            Debug.LogError("GameManager belum dihubungkan pada Key!");
+        }
+
+        // Memanggil event jika ada sistem lain yang berlangganan
         OnKeyCollected?.Invoke();
 
         // Menghilangkan objek Key dari scene

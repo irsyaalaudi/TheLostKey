@@ -1,15 +1,16 @@
 
-using System;
+using System.Collections;
 using UnityEngine;
 
 public class PlayerCollision : MonoBehaviour
 {
-    public event Action OnHazardHit;
-
     [Header("Core Reference")]
     [SerializeField] private GameManager gameManager;
 
-    private bool hasHitHazard = false;
+    [Header("Damage Settings")]
+    [SerializeField] private float damageCooldown = 1f;
+
+    private bool canTakeDamage = true;
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
@@ -23,24 +24,32 @@ public class PlayerCollision : MonoBehaviour
 
     private void CheckHazard(GameObject obj)
     {
-        if (hasHitHazard) return;
+        if (!obj.CompareTag("Hazard"))
+            return;
 
-        if (obj.CompareTag("Hazard"))
+        if (!canTakeDamage)
+            return;
+
+        if (gameManager == null)
         {
-            hasHitHazard = true;
-
-            Debug.Log("Player terkena rintangan!");
-
-            OnHazardHit?.Invoke();
-
-            if (gameManager != null)
-            {
-                gameManager.HandleGameOver();
-            }
-            else
-            {
-                Debug.LogError("GameManager belum dihubungkan pada PlayerCollision!");
-            }
+            Debug.LogError("GameManager belum dihubungkan!");
+            return;
         }
+
+        if (gameManager.CurrentState != GameState.Playing)
+            return;
+
+        StartCoroutine(DamageCooldown());
+
+        gameManager.TakeDamage(1);
+    }
+
+    private IEnumerator DamageCooldown()
+    {
+        canTakeDamage = false;
+
+        yield return new WaitForSeconds(damageCooldown);
+
+        canTakeDamage = true;
     }
 }
